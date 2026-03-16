@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Product Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .btn-add {
+            background: #f97316;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .btn-add:hover {
+            background: #ea580c;
+        }
+
+        .table-wrapper {
+            background: #1e293b;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #111827;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        td {
+            padding: 16px;
+            border-top: 1px solid #334155;
+        }
+
+        tbody tr:hover {
+            background: #334155;
+        }
+
+        .product-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-edit {
+            background: #3b82f6;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+        }
+
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .navbar {
+            background: #111827;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: -30px -30px 30px -30px;
+        }
+
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: 600;
+            color: #f97316;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-info {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <div class="navbar-brand">Product Management</div>
+        <div class="navbar-right">
+            <span class="user-info" th:text="'Logged in as: ' + ${#authentication.name}"></span>
+            <form th:action="@{/logout}" method="post" style="margin: 0;">
+                <button type="submit" class="logout-btn">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="topbar">
+            <div class="title">Product Management</div>
+            <a th:if="${isAdmin}" href="/products/create" class="btn-add">+ Add Product</a>
+        </div>
+
+        <div th:if="!${isAdmin}"
+            style="background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <strong>Notice:</strong> You do not have permission to add, edit, or delete products. Contact administrator
+            for access.
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Image</th>
+                        <th>Category</th>
+                        <th th:if="${isAdmin}">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(products)}">
+                        <td th:colspan="${isAdmin ? '6' : '5'}" class="empty">
+                            No products available
+                        </td>
+                    </tr>
+
+                    <tr th:each="product, iterStat : ${products}">
+                        <td th:text="${iterStat.count}"></td>
+                        <td th:text="${product.name}"></td>
+                        <td th:text="${#numbers.formatInteger(product.price,0,'COMMA') + ' đ'}"></td>
+
+                        <td>
+                            <img th:if="${product.image != null}"
+                                th:src="@{/products/image/{img}(img=${product.image})}" class="product-image">
+                        </td>
+
+                        <td th:text="${product.category?.name}"></td>
+
+                        <td th:if="${isAdmin}">
+                            <a th:href="@{/products/edit/{id}(id=${product.id})}" class="btn btn-edit">Edit</a>
+                            <a th:href="@{/products/delete/{id}(id=${product.id})}" class="btn btn-delete"
+                                onclick="return confirm('Delete this product?')">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
